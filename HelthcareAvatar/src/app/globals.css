@@ -1,0 +1,460 @@
+@import "tailwindcss";
+
+/* ─── CSS Custom Properties (Design Tokens) ─── */
+:root {
+  --color-bg: #0a0a0f;
+  --color-bg-elevated: #12121a;
+  --color-bg-card: #1a1a26;
+  --color-bg-glass: rgba(255, 255, 255, 0.04);
+  --color-bg-glass-hover: rgba(255, 255, 255, 0.07);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+  --color-text-primary: #f0f0f5;
+  --color-text-secondary: #8b8b9e;
+  --color-text-muted: #5a5a70;
+  --color-accent: #6366f1;
+  --color-accent-glow: rgba(99, 102, 241, 0.25);
+  --color-accent-soft: rgba(99, 102, 241, 0.1);
+  --color-success: #22c55e;
+  --color-success-glow: rgba(34, 197, 94, 0.2);
+  --color-danger: #ef4444;
+  --color-danger-glow: rgba(239, 68, 68, 0.25);
+  --color-warning: #f59e0b;
+  --color-gradient-start: #6366f1;
+  --color-gradient-mid: #8b5cf6;
+  --color-gradient-end: #a78bfa;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  --shadow-glow: 0 0 40px -12px var(--color-accent-glow);
+  --shadow-card: 0 4px 24px -4px rgba(0, 0, 0, 0.4);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-display: "Outfit", "Inter", system-ui, sans-serif;
+}
+
+/* ─── Base Resets ─── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ─── Animated Background ─── */
+.bg-grid {
+  background-image: radial-gradient(circle at 1px 1px,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 0);
+  background-size: 40px 40px;
+}
+
+.bg-gradient-radial {
+  background-image: radial-gradient(ellipse 80% 60% at 50% 0%,
+      rgba(99, 102, 241, 0.08) 0%,
+      transparent 60%);
+}
+
+/* ─── Glass Card ─── */
+.glass-card {
+  background: var(--color-bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: var(--color-bg-glass-hover);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ─── Buttons ─── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg,
+      var(--color-gradient-start),
+      var(--color-gradient-mid));
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px -4px var(--color-accent-glow);
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px -4px var(--color-accent-glow);
+  filter: brightness(1.1);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  background: var(--color-danger);
+  color: white;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px -4px var(--color-danger-glow);
+}
+
+.btn-danger:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 24px -4px var(--color-danger-glow);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  background: var(--color-bg-glass);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-ghost:hover {
+  background: var(--color-bg-glass-hover);
+  border-color: var(--color-border-strong);
+}
+
+.btn-ghost.active {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--color-danger);
+}
+
+/* ─── Avatar Container ─── */
+.avatar-container {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  margin: 0 auto;
+}
+
+.avatar-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-xl);
+}
+
+.avatar-glow {
+  position: absolute;
+  inset: -2px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg,
+      var(--color-gradient-start),
+      transparent 40%,
+      transparent 60%,
+      var(--color-gradient-end));
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.5s ease;
+}
+
+.avatar-container:hover .avatar-glow,
+.avatar-container.active .avatar-glow {
+  opacity: 0.4;
+}
+
+/* ─── Status Badge ─── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.status-badge.connecting {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--color-warning);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.status-badge.active {
+  background: var(--color-success-glow);
+  color: var(--color-success);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-badge.idle {
+  background: var(--color-accent-soft);
+  color: var(--color-gradient-end);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.status-badge.error {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--color-danger);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* ─── Pulse Dot ─── */
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.pulse-dot.connecting {
+  background: var(--color-warning);
+}
+
+.pulse-dot.active {
+  background: var(--color-success);
+}
+
+.pulse-dot.idle {
+  background: var(--color-gradient-end);
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* ─── Chat Panel ─── */
+.chat-panel {
+  background: var(--color-bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.chat-message {
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  max-width: 85%;
+  animation: fadeSlideIn 0.3s ease forwards;
+}
+
+.chat-message.assistant {
+  background: var(--color-bg-glass);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  align-self: flex-start;
+}
+
+.chat-message.user {
+  background: linear-gradient(135deg,
+      var(--color-gradient-start),
+      var(--color-gradient-mid));
+  color: white;
+  align-self: flex-end;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Waveform Animation ─── */
+.waveform {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+}
+
+.waveform-bar {
+  width: 3px;
+  background: var(--color-accent);
+  border-radius: 2px;
+  animation: waveform 1.2s ease-in-out infinite;
+}
+
+.waveform-bar:nth-child(1) {
+  animation-delay: 0s;
+  height: 30%;
+}
+
+.waveform-bar:nth-child(2) {
+  animation-delay: 0.1s;
+  height: 60%;
+}
+
+.waveform-bar:nth-child(3) {
+  animation-delay: 0.2s;
+  height: 100%;
+}
+
+.waveform-bar:nth-child(4) {
+  animation-delay: 0.3s;
+  height: 60%;
+}
+
+.waveform-bar:nth-child(5) {
+  animation-delay: 0.4s;
+  height: 30%;
+}
+
+@keyframes waveform {
+
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* ─── Floating Particles ─── */
+.floating-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: float 20s ease-in-out infinite;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  25% {
+    transform: translate(30px, -40px) scale(1.1);
+  }
+
+  50% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+
+  75% {
+    transform: translate(10px, -10px) scale(1.05);
+  }
+}
+
+/* ─── Spinner ─── */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ─── Typography Utilities ─── */
+.text-gradient {
+  background: linear-gradient(135deg,
+      var(--color-gradient-start),
+      var(--color-gradient-mid),
+      var(--color-gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* ─── Selection ─── */
+::selection {
+  background: var(--color-accent);
+  color: white;
+}
