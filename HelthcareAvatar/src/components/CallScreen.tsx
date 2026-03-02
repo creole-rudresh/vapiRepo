@@ -7,7 +7,7 @@ import {
     useCallback,
 } from "react";
 import Vapi from "@vapi-ai/web";
-import { createClient, AnamEvent } from "@anam-ai/js-sdk";
+import { createClient, AnamEvent, ConnectionClosedCode } from "@anam-ai/js-sdk";
 import {
     ArrowLeft,
     Mic,
@@ -64,11 +64,12 @@ export default function CallScreen({ onBack }: CallScreenProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const mobileMessagesEndRef = useRef<HTMLDivElement>(null);
+    const anamKeepAliveIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const isCallActive =
         callStatus === CallStatus.ACTIVE ||
         callStatus === CallStatus.SPEAKING ||
-        callStatus === CallStatus.LISTENING;
+        callStatus === CallStatus.LISTENING; 3000
 
     // Auto-scroll chat
     useEffect(() => {
@@ -158,37 +159,59 @@ export default function CallScreen({ onBack }: CallScreenProps) {
             );
             vapiRef.current = vapiInstance;
 
+            const firstMessageText = "Hello Soham, I am Alex, your personal Doctor's AI Assistant. To prepare your visit with the doctor, I'm going to ask you a series of questions about your health. Please answer as best you can.";
+
             // 3. Set up VAPI event listeners
-            vapiInstance.on("call-start", () => {
+            vapiInstance.on("call-start", async () => {
                 setCallStatus(CallStatus.ACTIVE);
                 setIsLoading(false);
                 console.log("✅ VAPI call started");
+
+                // Best Practice: Use high-level talk() for the initial greeting to avoid handshake race conditions
+                if (anamClientRef.current) {
+                    try {
+                        await anamClientRef.current.talk(firstMessageText);
+                        console.log("👋 Greeting spoken by Anam");
+                    } catch (e) {
+                        console.warn("Failed to trigger greeting:", e);
+                    }
+                }
             });
 
             // Ref for Anam Talk Stream
             let currentTalkStream: any = null;
+            let talkStreamDebounce: NodeJS.Timeout | null = null;
+
+            const closeTalkStream = async () => {
+                if (currentTalkStream) {
+                    const streamToClose = currentTalkStream;
+                    currentTalkStream = null;
+                    if (talkStreamDebounce) {
+                        clearTimeout(talkStreamDebounce);
+                        talkStreamDebounce = null;
+                    }
+                    try {
+                        // Check if session is still alive before ending stream
+                        if (anamClientRef.current) {
+                            await streamToClose.endMessage();
+                        }
+                    } catch (e) {
+                        // Log but don't crash if stream already closed by server
+                        console.log("ℹ️ Anam talk stream ended or closed early.");
+                    }
+                }
+            };
 
             vapiInstance.on("speech-start", () => {
                 setCallStatus(CallStatus.SPEAKING);
-                if (anamClientRef.current) {
-                    try {
-                        currentTalkStream = anamClientRef.current.createTalkMessageStream();
-                    } catch (e) {
-                        console.error("Failed to create Anam talk stream:", e);
-                    }
-                }
+                // We create the stream lazily in the 'message' event below.
+                // This prevents the "No data received for 0.5s" stall error 
+                // that happens if we create it here while waiting for Vapi's LLM.
             });
 
             vapiInstance.on("speech-end", async () => {
                 setCallStatus(CallStatus.LISTENING);
-                if (currentTalkStream) {
-                    try {
-                        await currentTalkStream.endMessage();
-                    } catch (e) {
-                        console.error("Failed to end Anam talk stream:", e);
-                    }
-                    currentTalkStream = null;
-                }
+                await closeTalkStream();
             });
 
             vapiInstance.on("call-end", () => {
@@ -203,6 +226,14 @@ export default function CallScreen({ onBack }: CallScreenProps) {
             // Handle messages
             vapiInstance.on("message", async (message: Record<string, unknown>) => {
 
+                // Handle user interruptions
+                if (message.type === "user-interrupted") {
+                    if (anamClientRef.current) {
+                        anamClientRef.current.interruptPersona();
+                    }
+                    await closeTalkStream();
+                }
+
                 // Stream raw LLM chunks to Anam for near-zero latency lip sync
                 if (
                     message.type === "model-output" &&
@@ -213,8 +244,19 @@ export default function CallScreen({ onBack }: CallScreenProps) {
                     if (!currentTalkStream) {
                         currentTalkStream = anamClientRef.current.createTalkMessageStream();
                     }
+
+                    if (talkStreamDebounce) {
+                        clearTimeout(talkStreamDebounce);
+                    }
+
                     try {
                         await currentTalkStream.streamMessageChunk(message.output, false);
+
+                        // Set debounce to cleanly close stream and prevent Annan's 15s timeout
+                        talkStreamDebounce = setTimeout(() => {
+                            closeTalkStream();
+                        }, 1000);
+
                     } catch (err) {
                         console.error("Error streaming chunk to Anam:", err);
                     }
@@ -243,10 +285,11 @@ export default function CallScreen({ onBack }: CallScreenProps) {
             await vapiInstance.start(
                 process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID as string,
                 {
-                    firstMessage: "Hello Soham, I am Alex, your personal Doctor's AI Assistant. To prepare your visit with the doctor, I'm going to ask you a series of questions about your health. Please answer as best you can. The session will be about five to seven minutes, and we would like to cover some General Updates, Vitals, About your Diet and Nutrition, Some Lifestyle & General Symptoms, and Some Diabetes Complication Review questions. Are you ready to start?",
+                    firstMessage: firstMessageText,
                     variableValues: {
                         name: "Soham",
-                        doctor_name: "Johnson"
+                        gender: "male",
+                        email: "soham.patient@example.com"
                     }
                 }
             );
@@ -299,6 +342,10 @@ export default function CallScreen({ onBack }: CallScreenProps) {
 
         // Stop Anam streaming
         try {
+            if (anamKeepAliveIntervalRef.current) {
+                clearInterval(anamKeepAliveIntervalRef.current);
+                anamKeepAliveIntervalRef.current = null;
+            }
             anamClientRef.current?.stopStreaming();
         } catch (e) {
             console.error("Error stopping Anam stream:", e);

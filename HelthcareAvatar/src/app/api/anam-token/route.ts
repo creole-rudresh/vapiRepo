@@ -18,6 +18,7 @@ export async function POST() {
 
     try {
         const personaConfig = {
+            personaId: "vapi_persona",
             name: "Liv",
             avatarId:
                 process.env.NEXT_PUBLIC_ANAM_AVATAR_ID ||
@@ -25,12 +26,8 @@ export async function POST() {
             voiceId:
                 process.env.NEXT_PUBLIC_ANAM_VOICE_ID ||
                 "6bfbe25a-979d-40f3-a92b-5394170af54b",
-            llmId:
-                process.env.NEXT_PUBLIC_ANAM_LLM_ID ||
-                "0934d97d-0c3a-4f33-91b0-5e136a0ef466",
-            systemPrompt:
-                "You are Liv, a helpful and friendly AI assistant. Keep responses conversational and concise.",
-            skipGreeting: true,
+            llmId: "CUSTOMER_CLIENT_V1",
+            maxSessionLengthSeconds: 900,
         };
 
         console.log("Creating Anam session with config:", JSON.stringify(personaConfig, null, 2));
